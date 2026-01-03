@@ -2,7 +2,7 @@
 
 > Herramienta de control de gestión automatizada para el seguimiento de inversiones, dividendos y proyección de Libertad Financiera.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)]((https://dashboardpublicodemo-64bvwfsnd6vgtf4avbwgry.streamlit.app/))
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dashboardpublicodemo-64bvwfsnd6vgtf4avbwgry.streamlit.app/)
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Production-green)
 
