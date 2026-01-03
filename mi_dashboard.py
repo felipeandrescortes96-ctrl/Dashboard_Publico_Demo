@@ -15,26 +15,34 @@ archivo_db = "inversiones.db"
 archivo_master = "Reporte_Inversiones_DEMO.xlsx" 
 
 try:
-    # 1. Carga de Historial (SQL)
-    conn = sqlite3.connect(archivo_db)
-    query = "SELECT * FROM historial_transacciones"
-    df_historia = pd.read_sql(query, conn)
-    conn.close()
+    # --- LOGICA DE CARGA INTELIGENTE ---
     
-    # Estandarización de nombres SQL -> Dashboard
-    df_historia.rename(columns={
-        'tipo_de_movimiento': 'Tipo de Movimiento',
-        'monto_total': 'Monto Total',
-        'fecha': 'Fecha',
-        'instrumento': 'Instrumento',
-        'precio': 'Precio',
-        'cantidad': 'Cantidad',
-        'comision': 'Comision'
-    }, inplace=True)
+    # 1. ¿Es Modo Demo?
+    if "DEMO" in archivo_master:
+        # Si es Demo, NO intentamos conectar a SQL (porque no existe en la nube)
+        # Creamos un dataframe vacío solo para que Python no reclame
+        df_historia = pd.DataFrame() 
+    else:
+        # 2. Si es Modo Real (tu PC), cargamos SQL
+        conn = sqlite3.connect(archivo_db)
+        query = "SELECT * FROM historial_transacciones"
+        df_historia = pd.read_sql(query, conn)
+        conn.close()
+        
+        # Estandarización de nombres SQL -> Dashboard
+        df_historia.rename(columns={
+            'tipo_de_movimiento': 'Tipo de Movimiento',
+            'monto_total': 'Monto Total',
+            'fecha': 'Fecha',
+            'instrumento': 'Instrumento',
+            'precio': 'Precio',
+            'cantidad': 'Cantidad',
+            'comision': 'Comision'
+        }, inplace=True)
+        
+        df_historia['Fecha'] = pd.to_datetime(df_historia['Fecha'])
     
-    df_historia['Fecha'] = pd.to_datetime(df_historia['Fecha'])
-    
-    # 2. Carga de Master (Excel)
+    # 3. Carga de Master (Excel) - ESTO SIEMPRE SE EJECUTA
     df_master = pd.read_excel(archivo_master)
     df_master['Valor Mercado'] = df_master['Stock'] * df_master['Precio Mercado']
     
@@ -44,7 +52,7 @@ try:
 except Exception as e:
     st.error(f"Error cargando datos: {e}")
     st.stop()
-
+    
 # --- SIDEBAR ---
 st.sidebar.header("⚙️ Configuración")
 meta_mensual = st.sidebar.number_input("Meta: Gastos Mensuales ($)", value=800000, step=50000)
