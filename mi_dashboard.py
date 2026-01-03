@@ -9,21 +9,19 @@ st.set_page_config(page_title="Felipe Financials", layout="wide", initial_sideba
 st.title("🦅 Centro de Comando Financiero")
 st.markdown("---")
 
-# --- ARCHIVOS (AQUÍ CONTROLAS EL MODO DEMO O REAL) ---
+# --- ARCHIVOS ---
 archivo_db = "inversiones.db"
-# CAMBIA ESTO A "Reporte_Inversiones_Master.xlsx" PARA VER TUS DATOS REALES
+# IMPORTANTE: En el repo público, esto debe apuntar al archivo DEMO
 archivo_master = "Reporte_Inversiones_DEMO.xlsx" 
 
 try:
-    # --- LOGICA DE CARGA INTELIGENTE ---
-    
+    # --- LÓGICA DE CARGA INTELIGENTE ---
     # 1. ¿Es Modo Demo?
     if "DEMO" in archivo_master:
-        # Si es Demo, NO intentamos conectar a SQL (porque no existe en la nube)
-        # Creamos un dataframe vacío solo para que Python no reclame
+        # Si es Demo, nos saltamos la conexión SQL para evitar el error en la nube
         df_historia = pd.DataFrame() 
     else:
-        # 2. Si es Modo Real (tu PC), cargamos SQL
+        # 2. Si es Modo Real (tu PC), cargamos SQL normalmente
         conn = sqlite3.connect(archivo_db)
         query = "SELECT * FROM historial_transacciones"
         df_historia = pd.read_sql(query, conn)
@@ -52,15 +50,15 @@ try:
 except Exception as e:
     st.error(f"Error cargando datos: {e}")
     st.stop()
-    
+
 # --- SIDEBAR ---
 st.sidebar.header("⚙️ Configuración")
 meta_mensual = st.sidebar.number_input("Meta: Gastos Mensuales ($)", value=800000, step=50000)
 
 if "DEMO" in archivo_master:
-    st.sidebar.warning("⚠️ MODO DEMO ACTIVADO")
+    st.sidebar.warning("⚠️ MODO DEMO (WEB)")
 else:
-    st.sidebar.success("✅ MODO REAL (SQL)")
+    st.sidebar.success("✅ MODO REAL (LOCAL)")
 
 # --- PESTAÑAS ---
 tab1, tab2, tab3 = st.tabs(["🏆 Tablero Principal", "📊 Detalle & Rentabilidad", "🔮 Simulador"])
@@ -98,7 +96,7 @@ with tab1:
     fig_pie = px.pie(df_master, values='Valor Mercado', names='Ticker', hole=0.5)
     st.plotly_chart(fig_pie, use_container_width=True)
 
-# --- TAB 2: DETALLE (AQUÍ ESTÁ LA NUEVA LÓGICA DE PRIVACIDAD) ---
+# --- TAB 2: DETALLE ---
 with tab2:
     st.subheader("🔍 Radiografía")
     
@@ -107,10 +105,11 @@ with tab2:
         # Falsificación de datos para la Demo (Basado en el Excel Demo)
         df_top = df_master[['Ticker', 'Proyección Anual ($)']].copy()
         df_top.rename(columns={'Ticker': 'Empresa', 'Proyección Anual ($)': 'Total_Cobrado'}, inplace=True)
-        df_top['Total_Cobrado'] = df_top['Total_Cobrado'] * 1.5 # Simulamos que han pagado más históricamente
+        df_top['Total_Cobrado'] = df_top['Total_Cobrado'] * 1.5 # Simulamos histórico mayor
         df_top = df_top.sort_values('Total_Cobrado', ascending=False).head(5)
     else:
-        # Datos Reales desde SQL
+        # Datos Reales desde SQL (Solo funciona en tu PC local)
+        # Re-creamos la conexión porque la cerramos arriba
         conn = sqlite3.connect(archivo_db)
         query_top = """
         SELECT instrumento AS Empresa, SUM(monto_total) AS Total_Cobrado
